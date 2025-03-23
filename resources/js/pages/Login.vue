@@ -63,19 +63,24 @@
 
   const handleLogin = async () => {
     try {
+      // CSRF Protection: Ensure Sanctum can authenticate the user
+      await axios.get("/sanctum/csrf-cookie");
+
+      // Send login request to Laravel API
       const response = await axios.post("/login", form.value);
 
-      // Save token and user data
+      // Extract token and user data
       const token = response.data.token;
-      const user = response.data.user; // Get user data
+      const user = response.data.user;
 
+      // Store token & user info
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      // Set token in axios headers
+      // Set default Authorization header for future requests
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-      // Redirect based on role
+      // Redirect user based on role
       if (user.role === "admin") {
         router.push("/admin");
       } else {

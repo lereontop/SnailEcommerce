@@ -88,44 +88,42 @@
     </div>
   </template>
 
-  <script>
-  import axios from 'axios';
+  <script setup>
+  import { ref } from "vue";
+  import { useRouter } from "vue-router";
+  import axios from "axios";
 
-  export default {
-    data() {
-      return {
-        form: {
-          name: '',
-          email: '',
-          password: '',
-          passwordConfirmation: '',
-          role: ''
-        }
-      };
-    },
-    methods: {
-      async handleRegister() {
-        if (this.form.password !== this.form.passwordConfirmation) {
-          alert("Passwords do not match!");
-          return;
-        }
+  const router = useRouter();
+  const form = ref({
+    name: "",
+    email: "",
+    password: "",
+    passwordConfirmation: "",
+    role: "",
+  });
 
-        try {
-          const response = await axios.post("/register", {
-            name: this.form.name,
-            email: this.form.email,
-            password: this.form.password,
-            role: this.form.role
-          });
+  const handleRegister = async () => {
+    if (form.value.password !== form.value.passwordConfirmation) {
+      alert("Passwords do not match!");
+      return;
+    }
 
-          alert(response.data.message);
-          this.$router.push("/login");
-        } catch (error) {
-          alert(error.response?.data?.message || "Registration failed");
-        }
-      }
+    try {
+      // CSRF Protection (Needed for Laravel Sanctum)
+      await axios.get("/sanctum/csrf-cookie");
+
+      // Send register request
+      const response = await axios.post("/register", {
+        name: form.value.name,
+        email: form.value.email,
+        password: form.value.password,
+        role: form.value.role,
+      });
+
+      alert(response.data.message);
+      router.push("/login"); // Redirect to login after registration
+    } catch (error) {
+      alert(error.response?.data?.message || "Registration failed");
     }
   };
   </script>
-
-
